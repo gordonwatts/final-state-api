@@ -9,7 +9,11 @@ from typing import List
 import typer
 from openai import OpenAI
 
-PROMPT = """The following feynman diagrams all include a particle labeled `a`, which is a long lived particle. Could you organize them into analyses by final state that search for these `a`'s? Write the answer in markdown."""
+PROMPT = (
+    "The following feynman diagrams all include a particle labeled `a`, which is a "
+    "long lived particle. Could you organize them into analyses by final state that "
+    "search for these `a`'s? Write the answer in markdown."
+)
 
 
 def image_data_url(path):
