@@ -1,11 +1,13 @@
 #!/usr/bin/env -S uv run --script
+# /// script
+# dependencies = ["openai>=1.40.0", "typer>=0.12.0"]
+# ///
 import base64
-import json
 import mimetypes
-import os
-import sys
-import urllib.request
+from typing import List
 
+import typer
+from openai import OpenAI
 
 PROMPT = """The following feynman diagrams all include a particle labeled `a`, which is a long lived particle. Could you organize them into analyses by final state that search for these `a`'s? Write the answer in markdown."""
 
@@ -17,43 +19,22 @@ def image_data_url(path):
     return f"data:{mime};base64,{encoded}"
 
 
-model = sys.argv[1]
-image_paths = [path for arg in sys.argv[2:] for path in arg.split(",") if path]
+def main(model: str, images: List[str] = typer.Argument(..., help="Image file paths")):
+    content = [{"type": "input_text", "text": PROMPT}]
+    content += [
+        {"type": "input_image", "image_url": image_data_url(path), "detail": "auto"}
+        for path in images
+    ]
 
-content = [{"type": "input_text", "text": PROMPT}]
-content += [
-    {"type": "input_image", "image_url": image_data_url(path), "detail": "auto"}
-    for path in image_paths
-]
+    payload = {
+        "model": model,
+        "input": [{"role": "user", "content": content}],
+    }
 
-payload = {
-    "model": model,
-    "input": [
-        {
-            "role": "user",
-            "content": content,
-        }
-    ],
-}
+    client = OpenAI()
+    response = client.responses.create(**payload)
+    print(response.output_text)
 
-request = urllib.request.Request(
-    "https://api.openai.com/v1/responses",
-    data=json.dumps(payload).encode("utf-8"),
-    headers={
-        "Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}",
-        "Content-Type": "application/json",
-    },
-    method="POST",
-)
 
-response = json.loads(urllib.request.urlopen(request).read().decode("utf-8"))
-
-print(
-    "\n".join(
-        part["text"]
-        for item in response["output"]
-        if item["type"] == "message"
-        for part in item["content"]
-        if part["type"] == "output_text"
-    )
-)
+if __name__ == "__main__":
+    typer.run(main)
