@@ -20,6 +20,16 @@ def image_data_url(path):
 
 
 def main(model: str, images: List[str] = typer.Argument(..., help="Image file paths")):
+    """Given a Feynman diagram look for LLP's in it, and then describe a possible analysis
+    approach.
+
+    The ENV variable OPENAI_API_KEY must be set to a valid OpenAI API key.
+
+    Args:
+        model (str): _description_
+        images (List[str], optional): _description_. Defaults to typer.Argument(..., help="Image file paths").
+    """
+
     content = [{"type": "input_text", "text": PROMPT}]
     content += [
         {"type": "input_image", "image_url": image_data_url(path), "detail": "auto"}
